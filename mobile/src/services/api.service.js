@@ -3,7 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IP de la PC en la red actual.
-const BASE_URL = 'http://172.21.64.43:3000/api';
+const BASE_URL = 'https://93qa9dr0p2.execute-api.us-east-1.amazonaws.com/api';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
