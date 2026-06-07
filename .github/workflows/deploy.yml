@@ -47,7 +47,7 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
       # ── Tests ────────────────────────────────────────────────
       # Si más adelante se agrega un framework de tests (jest/mocha),
