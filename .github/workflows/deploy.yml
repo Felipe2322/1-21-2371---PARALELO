@@ -193,24 +193,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      # Setup Terraform solo para leer el output del nombre de la función
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.0"
-          terraform_wrapper: false
-
       - name: Obtener nombre de la función Lambda
         id: get_function
-        working-directory: terraform
         run: |
-          terraform init -input=false
-          FUNCTION_NAME=$(terraform output -raw lambda_function_name)
+          FUNCTION_NAME="app-felix-api-production"
           echo "function_name=$FUNCTION_NAME" >> $GITHUB_OUTPUT
-        env:
-          TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
-          TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
-          TF_VAR_aws_region:   ${{ secrets.AWS_REGION }}
+          echo "🔍 Lambda function: $FUNCTION_NAME"
 
       - name: Actualizar código de Lambda
         run: |
