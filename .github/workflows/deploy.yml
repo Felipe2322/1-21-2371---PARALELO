@@ -143,8 +143,8 @@ jobs:
           echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Lambda** | app-felix-api-production |" >> $GITHUB_STEP_SUMMARY
           echo "| **S3 Bucket** | app-felix-uploads-production |" >> $GITHUB_STEP_SUMMARY
-          echo "| **API URL** | https://93qa9dr0p2.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Health Check** | https://93qa9dr0p2.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com/health |" >> $GITHUB_STEP_SUMMARY
+          echo "| **API URL** | https://93ga9dr0p2.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Health Check** | https://93ga9dr0p2.execute-api.${{ secrets.AWS_REGION }}.amazonaws.com/health |" >> $GITHUB_STEP_SUMMARY
 
   # ============================================================
   # JOB 3 – DEPLOY LAMBDA (siempre actualiza el código)

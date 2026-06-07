@@ -3,11 +3,11 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IP de la PC en la red actual.
-const BASE_URL = 'https://93qa9dr0p2.execute-api.us-east-1.amazonaws.com/api';
+const BASE_URL = 'https://93ga9dr0p2.execute-api.us-east-1.amazonaws.com/api';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 30000, // 30s para cubrir cold start de Lambda
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
