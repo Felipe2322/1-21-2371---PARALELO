@@ -203,6 +203,7 @@ resource "aws_apigatewayv2_stage" "default" {
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.lambda_logs.arn
+    format          = "$context.requestId $context.status $context.routeKey $context.integrationErrorMessage"
   }
 }
 
