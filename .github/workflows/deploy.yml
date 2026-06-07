@@ -1,0 +1,229 @@
+name: Deploy – Backend Lambda + Terraform
+
+# ────────────────────────────────────────────────────────────────
+# Disparadores: push a main/master y pull requests hacia esas ramas
+# ────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+# Evitar despliegues simultáneos que pisen el estado de Terraform
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION:      ${{ secrets.AWS_REGION }}
+  TF_WORKING_DIR:  ./terraform
+
+jobs:
+  # ============================================================
+  # JOB 1 – BUILD & TEST
+  # ============================================================
+  build:
+    name: "✔ Build & Test"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # ── Node.js ──────────────────────────────────────────────
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # ── Tests ────────────────────────────────────────────────
+      # Si más adelante se agrega un framework de tests (jest/mocha),
+      # este paso los ejecutará automáticamente.
+      - name: Ejecutar pruebas
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test
+          else
+            echo "⚠️  No se encontraron pruebas configuradas – omitiendo paso de test."
+          fi
+
+      # ── Empaquetado Lambda ────────────────────────────────────
+      - name: Empaquetar Lambda (ZIP)
+        run: |
+          echo "📦 Creando lambda.zip..."
+          # Solo incluir código fuente y node_modules de producción.
+          # Excluir archivos innecesarios para reducir el tamaño del paquete.
+          zip -r lambda.zip \
+            src/ \
+            node_modules/ \
+            package.json \
+            -x "*/node_modules/.cache/*" \
+            -x "*/.git/*" \
+            -x "*/test/*" \
+            -x "*/tests/*" \
+            -x "*/*.test.js" \
+            -x "*/*.spec.js"
+          echo "✅ lambda.zip creado: $(du -sh lambda.zip | cut -f1)"
+
+      # ── Subir artefacto para el job de Terraform ─────────────
+      - name: Subir lambda.zip como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-package
+          path: backend/lambda.zip
+          retention-days: 1
+
+  # ============================================================
+  # JOB 2 – TERRAFORM (solo en push; no en PR)
+  # ============================================================
+  terraform:
+    name: "✔ Terraform Plan & Apply"
+    runs-on: ubuntu-latest
+    needs: build
+    # Solo ejecutar apply en push a rama principal
+    if: github.event_name == 'push'
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # ── Bajar el lambda.zip generado en el job anterior ──────
+      - name: Descargar artefacto lambda.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-package
+          path: backend/
+
+      # ── Credenciales AWS ─────────────────────────────────────
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      # ── Terraform Setup ───────────────────────────────────────
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      # ── terraform init ────────────────────────────────────────
+      - name: "✔ Terraform Init"
+        run: terraform init
+
+      # ── terraform validate ────────────────────────────────────
+      - name: "✔ Terraform Validate"
+        run: terraform validate
+
+      # ── terraform plan ────────────────────────────────────────
+      - name: "✔ Terraform Plan"
+        run: |
+          terraform plan \
+            -var="database_url=${{ secrets.DATABASE_URL }}" \
+            -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
+            -out=tfplan
+        env:
+          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+
+      # ── terraform apply ───────────────────────────────────────
+      - name: "✔ Terraform Apply"
+        run: terraform apply -auto-approve tfplan
+
+      # ── Capturar outputs para el siguiente job ────────────────
+      - name: Capturar outputs de Terraform
+        id: tf_outputs
+        run: |
+          API_URL=$(terraform output -raw api_gateway_url)
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "🌐 API URL: $API_URL"
+
+      # ── Mostrar resumen en el job summary ─────────────────────
+      - name: Resumen del despliegue
+        run: |
+          echo "## 🚀 Despliegue exitoso" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Recurso | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **API URL** | $(terraform output -raw api_gateway_url) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Lambda** | $(terraform output -raw lambda_function_name) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **S3 Bucket** | $(terraform output -raw s3_bucket_name) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Health Check** | $(terraform output -raw health_check_url) |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # JOB 3 – DEPLOY LAMBDA (actualizar código si ya existe)
+  # ============================================================
+  deploy:
+    name: "✔ Deploy Lambda"
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Descargar artefacto lambda.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-package
+          path: backend/
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      # Setup Terraform solo para leer el output del nombre de la función
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+          terraform_wrapper: false
+
+      - name: Obtener nombre de la función Lambda
+        id: get_function
+        working-directory: terraform
+        run: |
+          terraform init -input=false
+          FUNCTION_NAME=$(terraform output -raw lambda_function_name)
+          echo "function_name=$FUNCTION_NAME" >> $GITHUB_OUTPUT
+        env:
+          TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+          TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
+          TF_VAR_aws_region:   ${{ secrets.AWS_REGION }}
+
+      - name: Actualizar código de Lambda
+        run: |
+          echo "🔄 Actualizando código de Lambda: ${{ steps.get_function.outputs.function_name }}"
+          aws lambda update-function-code \
+            --function-name ${{ steps.get_function.outputs.function_name }} \
+            --zip-file fileb://backend/lambda.zip \
+            --region ${{ secrets.AWS_REGION }}
+          echo "✅ Lambda actualizada correctamente"
+
+      - name: Esperar publicación de Lambda
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ steps.get_function.outputs.function_name }} \
+            --region ${{ secrets.AWS_REGION }}
+          echo "✅ Lambda lista"

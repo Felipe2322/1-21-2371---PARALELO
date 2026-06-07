@@ -1,0 +1,42 @@
+# ── Node ──────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# ── Entornos ──────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Build / Lambda package ────────────
+lambda.zip
+dist/
+build/
+
+# ── Terraform ─────────────────────────
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.d/
+*.tfplan
+tfplan
+# terraform.tfvars contiene valores NO sensibles; se versiona.
+# Si tuvieras secrets ahí, agrégalo:
+# terraform/terraform.tfvars
+
+# ── Uploads locales ───────────────────
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ── Expo / React Native ───────────────
+mobile/.expo/
+mobile/node_modules/
+mobile/*.jks
+mobile/*.keystore
+
+# ── OS ────────────────────────────────
+.DS_Store
+Thumbs.db
