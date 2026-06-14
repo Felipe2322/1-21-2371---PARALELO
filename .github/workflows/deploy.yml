@@ -112,39 +112,81 @@ jobs:
       # Importar recursos existentes para que Terraform no intente recrearlos
       - name: Importar recursos existentes
         run: |
-          REGION=${{ secrets.AWS_REGION }}
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION=${{ secrets.AWS_REGION }}
 
           import_if_missing() {
             local resource=$1
             local id=$2
             terraform state show "$resource" > /dev/null 2>&1 || \
-              terraform import "$resource" "$id" || true
+              terraform import \
+                -var="database_url=${{ secrets.DATABASE_URL }}" \
+                -var="jwt_secret=${{ secrets.JWT_SECRET }}" \
+                "$resource" "$id" 2>&1 || true
           }
 
+          # ── S3 ──────────────────────────────────────────────
           import_if_missing "aws_s3_bucket.uploads" \
             "app-felix-uploads-production"
 
+          # ── CloudWatch ──────────────────────────────────────
           import_if_missing "aws_cloudwatch_log_group.lambda_logs" \
             "/aws/lambda/app-felix-api-production"
-
-          import_if_missing "aws_iam_role.lambda_exec" \
-            "app-felix-lambda-role-production"
-
-          import_if_missing "aws_lambda_function.api" \
-            "app-felix-api-production"
-
-          import_if_missing "aws_lambda_permission.apigw" \
-            "app-felix-api-production/AllowAPIGatewayInvoke"
-
-          import_if_missing "aws_iam_role.notification_lambda_exec" \
-            "app-felix-notification-lambda-role-production"
 
           import_if_missing "aws_cloudwatch_log_group.notification_lambda_logs" \
             "/aws/lambda/app-felix-notification-lambda-production"
 
+          # ── IAM Roles ───────────────────────────────────────
+          import_if_missing "aws_iam_role.lambda_exec" \
+            "app-felix-lambda-role-production"
+
+          import_if_missing "aws_iam_role.notification_lambda_exec" \
+            "app-felix-notification-lambda-role-production"
+
+          # ── Lambda Functions ────────────────────────────────
+          import_if_missing "aws_lambda_function.api" \
+            "app-felix-api-production"
+
           import_if_missing "aws_lambda_function.notification" \
             "app-felix-notification-lambda-production"
+
+          # ── Lambda Permission ───────────────────────────────
+          import_if_missing "aws_lambda_permission.apigw" \
+            "app-felix-api-production/AllowAPIGatewayInvoke"
+
+          # ── Event Source Mapping ────────────────────────────
+          import_if_missing "aws_lambda_event_source_mapping.sqs_to_notification_lambda" \
+            "acee480d-09b5-446f-ae99-c0c106e274f9"
+
+          # ── SNS ─────────────────────────────────────────────
+          SNS_ARN="arn:aws:sns:${REGION}:${ACCOUNT_ID}:app-felix-notifications-production"
+          import_if_missing "aws_sns_topic.notifications" "$SNS_ARN"
+
+          # ── SQS ─────────────────────────────────────────────
+          SQS_URL="https://sqs.${REGION}.amazonaws.com/${ACCOUNT_ID}/app-felix-notifications-production"
+          SQS_DLQ_URL="https://sqs.${REGION}.amazonaws.com/${ACCOUNT_ID}/app-felix-notifications-dlq-production"
+          import_if_missing "aws_sqs_queue.notifications" "$SQS_URL"
+          import_if_missing "aws_sqs_queue.notifications_dlq" "$SQS_DLQ_URL"
+          import_if_missing "aws_sqs_queue_policy.notifications" "$SQS_URL"
+
+          # ── SNS Subscription ────────────────────────────────
+          SUB_ARN=$(aws sns list-subscriptions-by-topic \
+            --topic-arn "$SNS_ARN" \
+            --region "$REGION" \
+            --query "Subscriptions[0].SubscriptionArn" \
+            --output text 2>/dev/null || echo "")
+          if [ -n "$SUB_ARN" ] && [ "$SUB_ARN" != "None" ] && [ "$SUB_ARN" != "PendingConfirmation" ]; then
+            import_if_missing "aws_sns_topic_subscription.sns_to_sqs" "$SUB_ARN"
+          fi
+
+          # ── API Gateway (importar el activo: 93ga9dr0p2) ────
+          import_if_missing "aws_apigatewayv2_api.http_api" \
+            "93ga9dr0p2"
+
+          import_if_missing "aws_apigatewayv2_stage.default" \
+            "93ga9dr0p2/\$default"
+
+          echo "✅ Import completado"
         env:
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
