@@ -98,19 +98,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      # Verificar si la Lambda ya existe para decidir si hacer apply
-      - name: Verificar si Lambda ya existe
-        id: check_lambda
-        run: |
-          if aws lambda get-function --function-name app-felix-api-production \
-               --region ${{ secrets.AWS_REGION }} > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Lambda ya existe – saltando terraform apply"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "🆕 Lambda no existe – ejecutando terraform apply"
-          fi
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -122,6 +109,35 @@ jobs:
       - name: "✔ Terraform Validate"
         run: terraform validate
 
+      # Importar recursos existentes para que Terraform no intente recrearlos
+      - name: Importar recursos existentes
+        run: |
+          REGION=${{ secrets.AWS_REGION }}
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+          import_if_missing() {
+            local resource=$1
+            local id=$2
+            terraform state show "$resource" > /dev/null 2>&1 || \
+              terraform import "$resource" "$id" || true
+          }
+
+          import_if_missing "aws_s3_bucket.uploads" \
+            "app-felix-uploads-production"
+
+          import_if_missing "aws_cloudwatch_log_group.lambda_logs" \
+            "/aws/lambda/app-felix-api-production"
+
+          import_if_missing "aws_iam_role.lambda_exec" \
+            "app-felix-lambda-role-production"
+
+          import_if_missing "aws_lambda_function.api" \
+            "app-felix-api-production"
+        env:
+          TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
+          TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
+          TF_VAR_aws_region:   ${{ secrets.AWS_REGION }}
+
       - name: "✔ Terraform Plan"
         run: |
           terraform plan \
@@ -132,7 +148,6 @@ jobs:
           TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
 
       - name: "✔ Terraform Apply"
-        if: steps.check_lambda.outputs.exists == 'false'
         run: terraform apply -auto-approve tfplan
 
       # Actualizar SNS_TOPIC_ARN en la Lambda principal (siempre)
