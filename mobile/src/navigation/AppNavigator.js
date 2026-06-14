@@ -20,10 +20,11 @@ const Tab = createBottomTabNavigator();
 
 const TabIcon = ({ label, focused }) => (
   <View style={tabStyles.iconContainer}>
-    <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>
-      {label}
-    </Text>
-    {focused && <View style={tabStyles.dot} />}
+    <View style={[tabStyles.pill, focused && tabStyles.pillFocused]}>
+      <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>
+        {label}
+      </Text>
+    </View>
   </View>
 );const MainTabs = () => {
   const { user } = useAuth();
@@ -164,16 +165,23 @@ const tabStyles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.line,
-    height: 72,
+    height: 68,
     paddingBottom: 10,
-    paddingTop: 10,
-    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingHorizontal: 6,
   },
   iconContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 60,
-    paddingHorizontal: 4,
+  },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  pillFocused: {
+    backgroundColor: colors.primarySoft,
   },
   label: {
     fontSize: 12,
@@ -183,13 +191,6 @@ const tabStyles = StyleSheet.create({
   labelFocused: {
     color: colors.primaryDark,
     fontWeight: '800',
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.primary,
-    marginTop: 4,
   },
 });
 
