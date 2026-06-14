@@ -1,158 +1,131 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { colors, radius, shadow, type } from '../../styles/theme';
-
-const fields = [
-  { key: 'name', label: 'Nombre completo', placeholder: 'Felix Cabrera', keyboardType: 'default' },
-  { key: 'email', label: 'Correo', placeholder: 'correo@ejemplo.com', keyboardType: 'email-address' },
-  { key: 'password', label: 'Contrasena', placeholder: 'Minimo 6 caracteres', secure: true },
-  { key: 'confirmPassword', label: 'Confirmar contrasena', placeholder: 'Repite la contrasena', secure: true },
-];
+import { colors, radius, shadow } from '../../styles/theme';
 
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [loading, setLoading] = useState(false);
+  const [errors,  setErrors]  = useState({});
 
-  const updateField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: null }));
+  const set = (k, v) => {
+    setForm(p => ({ ...p, [k]: v }));
+    setErrors(p => ({ ...p, [k]: null }));
   };
 
   const validate = () => {
-    const nextErrors = {};
-    if (!form.name || form.name.trim().length < 2) {
-      nextErrors.name = 'Escribe el nombre completo';
-    }
-    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      nextErrors.email = 'Ingresa un correo valido';
-    }
-    if (!form.password || form.password.length < 6) {
-      nextErrors.password = 'Usa al menos 6 caracteres';
-    }
-    if (form.password !== form.confirmPassword) {
-      nextErrors.confirmPassword = 'Las contrasenas no coinciden';
-    }
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const e = {};
+    if (!form.name || form.name.trim().length < 2) e.name = 'Nombre muy corto';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Correo no válido';
+    if (!form.password || form.password.length < 6) e.password = 'Mínimo 6 caracteres';
+    if (form.password !== form.confirm) e.confirm = 'Las contraseñas no coinciden';
+    setErrors(e);
+    return !Object.keys(e).length;
   };
 
   const handleRegister = async () => {
     if (!validate()) return;
-
-    setIsLoading(true);
+    setLoading(true);
     try {
       await register(form.name.trim(), form.email.trim().toLowerCase(), form.password);
     } catch (err) {
-      Alert.alert('No se pudo crear la cuenta', err.response?.data?.message || 'Intenta nuevamente');
+      Alert.alert('Error', err.response?.data?.message || 'No se pudo crear la cuenta');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backButtonText}>Volver</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Nueva cuenta</Text>
-          <Text style={styles.subtitle}>Crea un acceso para usar el panel movil.</Text>
-        </View>
+  const Field = ({ k, label, secure, keyboard }) => (
+    <View style={{ marginBottom: 16 }}>
+      <Text style={s.label}>{label}</Text>
+      <TextInput
+        style={[s.input, errors[k] && s.inputErr]}
+        value={form[k]}
+        onChangeText={v => set(k, v)}
+        secureTextEntry={secure}
+        keyboardType={keyboard}
+        autoCapitalize={k === 'name' ? 'words' : 'none'}
+        autoCorrect={false}
+        placeholderTextColor={colors.muted}
+      />
+      {errors[k] ? <Text style={s.err}>{errors[k]}</Text> : null}
+    </View>
+  );
 
-        <View style={styles.form}>
-          {fields.map(({ key, label, placeholder, keyboardType, secure }) => (
-            <View key={key} style={styles.inputGroup}>
-              <Text style={styles.label}>{label}</Text>
-              <TextInput
-                style={[styles.input, errors[key] && styles.inputError]}
-                placeholder={placeholder}
-                placeholderTextColor={colors.muted}
-                value={form[key]}
-                onChangeText={(value) => updateField(key, value)}
-                keyboardType={keyboardType}
-                autoCapitalize={key === 'name' ? 'words' : 'none'}
-                secureTextEntry={secure}
-                autoCorrect={false}
-              />
-              {errors[key] ? <Text style={styles.errorText}>{errors[key]}</Text> : null}
-            </View>
-          ))}
+  return (
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+
+        <TouchableOpacity style={s.back} onPress={() => navigation.goBack()}>
+          <Text style={s.backText}>← Volver</Text>
+        </TouchableOpacity>
+
+        <Text style={s.title}>Nueva cuenta</Text>
+        <Text style={s.sub}>Completa los datos para registrarte</Text>
+
+        <View style={s.form}>
+          <Field k="name"     label="Nombre"              keyboard="default" />
+          <Field k="email"    label="Correo"              keyboard="email-address" />
+          <Field k="password" label="Contraseña"          secure />
+          <Field k="confirm"  label="Confirmar contraseña" secure />
 
           <TouchableOpacity
-            style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+            style={[s.btn, loading && s.btnOff]}
             onPress={handleRegister}
-            disabled={isLoading}
+            disabled={loading}
+            activeOpacity={0.85}
           >
-            {isLoading ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <Text style={styles.primaryButtonText}>Crear cuenta</Text>
-            )}
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={s.btnText}>Crear cuenta</Text>
+            }
           </TouchableOpacity>
         </View>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  header: { marginBottom: 20 },
-  backButton: { alignSelf: 'flex-start', paddingVertical: 8, marginBottom: 16 },
-  backButtonText: { color: colors.primaryDark, fontSize: 14, fontWeight: '700' },
-  title: type.title,
-  subtitle: { ...type.body, marginTop: 8 },
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: colors.background },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+
+  back:     { marginBottom: 24 },
+  backText: { color: colors.primaryDark, fontSize: 14, fontWeight: '700' },
+
+  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  sub:   { color: colors.inkSoft, fontSize: 14, marginTop: 6, marginBottom: 28 },
+
   form: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: colors.line,
     ...shadow,
   },
-  inputGroup: { marginBottom: 14 },
-  label: { ...type.label, marginBottom: 7 },
+  label: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: {
-    minHeight: 48,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 15,
     color: colors.ink,
-    backgroundColor: colors.surface,
   },
-  inputError: { borderColor: colors.danger },
-  errorText: { color: colors.danger, fontSize: 12, marginTop: 5 },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  buttonDisabled: { opacity: 0.65 },
-  primaryButtonText: { color: colors.surface, fontSize: 15, fontWeight: '700' },
+  inputErr: { borderColor: colors.danger },
+  err: { color: colors.danger, fontSize: 12, marginTop: 5 },
+
+  btn:    { marginTop: 8, backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: 15, alignItems: 'center' },
+  btnOff: { opacity: 0.6 },
+  btnText:{ color: '#fff', fontSize: 15, fontWeight: '800' },
 });
 
 export default RegisterScreen;

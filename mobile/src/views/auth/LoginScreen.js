@@ -1,194 +1,152 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { colors, radius, shadow, type } from '../../styles/theme';
+import { colors, radius, shadow } from '../../styles/theme';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [loading,  setLoading]  = useState(false);
+  const [errors,   setErrors]   = useState({});
 
   const validate = () => {
-    const nextErrors = {};
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      nextErrors.email = 'Ingresa un correo valido';
-    }
-    if (!password) {
-      nextErrors.password = 'Ingresa tu contrasena';
-    }
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const e = {};
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Correo no válido';
+    if (!password) e.password = 'Ingresa tu contraseña';
+    setErrors(e);
+    return !Object.keys(e).length;
   };
 
   const handleLogin = async () => {
     if (!validate()) return;
-
-    setIsLoading(true);
+    setLoading(true);
     try {
       await login(email.trim().toLowerCase(), password);
     } catch (err) {
-      Alert.alert('No se pudo iniciar sesion', err.response?.data?.message || 'Revisa tus datos e intenta otra vez');
+      Alert.alert('Error al entrar', err.response?.data?.message || 'Revisa tus datos');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.brandRow}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>FC</Text>
+    <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+
+        {/* Logo */}
+        <View style={s.logoWrap}>
+          <View style={s.logo}>
+            <Text style={s.logoText}>FC</Text>
           </View>
-          <View>
-            <Text style={styles.brandName}>Felix Cabrera</Text>
-            <Text style={styles.brandCaption}>Panel movil</Text>
-          </View>
+          <Text style={s.appName}>Felix Cabrera</Text>
+          <Text style={s.appSub}>Panel móvil</Text>
         </View>
 
-        <View style={styles.copy}>
-          <Text style={styles.title}>Entrar</Text>
-          <Text style={styles.subtitle}>Gestiona usuarios, perfil y archivos desde tu telefono.</Text>
-        </View>
+        <Text style={s.title}>Bienvenido</Text>
+        <Text style={s.sub}>Inicia sesión para continuar</Text>
 
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Correo</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              placeholder="felixcabrera@admin.com"
-              placeholderTextColor={colors.muted}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setErrors((prev) => ({ ...prev, email: null }));
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
-          </View>
+        {/* Form */}
+        <View style={s.form}>
+          <Text style={s.label}>Correo</Text>
+          <TextInput
+            style={[s.input, errors.email && s.inputErr]}
+            value={email}
+            onChangeText={t => { setEmail(t); setErrors(p => ({ ...p, email: null })); }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholderTextColor={colors.muted}
+          />
+          {errors.email ? <Text style={s.err}>{errors.email}</Text> : null}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Contrasena</Text>
-            <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
-              placeholder="12345"
-              placeholderTextColor={colors.muted}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setErrors((prev) => ({ ...prev, password: null }));
-              }}
-              secureTextEntry
-            />
-            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
-          </View>
+          <Text style={[s.label, { marginTop: 16 }]}>Contraseña</Text>
+          <TextInput
+            style={[s.input, errors.password && s.inputErr]}
+            value={password}
+            onChangeText={t => { setPassword(t); setErrors(p => ({ ...p, password: null })); }}
+            secureTextEntry
+            placeholderTextColor={colors.muted}
+          />
+          {errors.password ? <Text style={s.err}>{errors.password}</Text> : null}
 
           <TouchableOpacity
-            style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+            style={[s.btn, loading && s.btnOff]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={loading}
+            activeOpacity={0.85}
           >
-            {isLoading ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <Text style={styles.primaryButtonText}>Iniciar sesion</Text>
-            )}
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={s.btnText}>Entrar</Text>
+            }
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.secondaryButtonText}>Crear una cuenta nueva</Text>
+          <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Register')}>
+            <Text style={s.linkText}>Crear una cuenta nueva</Text>
           </TouchableOpacity>
         </View>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 34,
-  },
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: colors.background },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+
+  logoWrap: { alignItems: 'center', marginBottom: 32 },
   logo: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    width: 64, height: 64, borderRadius: radius.lg,
+    backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    ...shadow,
   },
-  logoText: { color: colors.surface, fontSize: 16, fontWeight: '800' },
-  brandName: { fontSize: 16, fontWeight: '800', color: colors.ink },
-  brandCaption: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  copy: { marginBottom: 22 },
-  title: type.title,
-  subtitle: { ...type.body, marginTop: 8, maxWidth: 300 },
+  logoText: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  appName:  { color: colors.ink, fontSize: 18, fontWeight: '800' },
+  appSub:   { color: colors.muted, fontSize: 13, marginTop: 2 },
+
+  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  sub:   { color: colors.inkSoft, fontSize: 14, marginTop: 6, marginBottom: 28 },
+
   form: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: colors.line,
     ...shadow,
   },
-  inputGroup: { marginBottom: 14 },
-  label: { ...type.label, marginBottom: 7 },
+  label: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: {
-    minHeight: 48,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 15,
     color: colors.ink,
-    backgroundColor: colors.surface,
   },
-  inputError: { borderColor: colors.danger },
-  errorText: { color: colors.danger, fontSize: 12, marginTop: 5 },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: radius.md,
+  inputErr: { borderColor: colors.danger },
+  err: { color: colors.danger, fontSize: 12, marginTop: 5 },
+
+  btn: {
+    marginTop: 24,
     backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingVertical: 15,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
   },
-  buttonDisabled: { opacity: 0.65 },
-  primaryButtonText: { color: colors.surface, fontSize: 15, fontWeight: '700' },
-  secondaryButton: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: { color: colors.primaryDark, fontSize: 14, fontWeight: '700' },
+  btnOff:  { opacity: 0.6 },
+  btnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+
+  link:     { alignItems: 'center', marginTop: 14 },
+  linkText: { color: colors.primaryDark, fontSize: 14, fontWeight: '700' },
 });
 
 export default LoginScreen;

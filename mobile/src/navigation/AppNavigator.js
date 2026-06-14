@@ -18,20 +18,14 @@ import NotificationScreen from '../views/notifications/NotificationScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ label, mark, focused }) => (
+const TabIcon = ({ label, focused }) => (
   <View style={tabStyles.iconContainer}>
-    <View style={[tabStyles.mark, focused && tabStyles.markFocused]}>
-      <Text style={[tabStyles.markText, focused && tabStyles.markTextFocused]}>
-        {mark}
-      </Text>
-    </View>
     <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>
       {label}
     </Text>
+    {focused && <View style={tabStyles.dot} />}
   </View>
-);
-
-const MainTabs = () => {
+);const MainTabs = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -48,7 +42,7 @@ const MainTabs = () => {
         component={DashboardScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon mark="IN" label="Inicio" focused={focused} />
+            <TabIcon label="Inicio" focused={focused} />
           ),
         }}
       />
@@ -58,7 +52,7 @@ const MainTabs = () => {
           component={UsersScreen}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabIcon mark="US" label="Usuarios" focused={focused} />
+              <TabIcon label="Usuarios" focused={focused} />
             ),
           }}
         />
@@ -68,7 +62,7 @@ const MainTabs = () => {
         component={UploadScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon mark="AR" label="Archivos" focused={focused} />
+            <TabIcon label="Archivos" focused={focused} />
           ),
         }}
       />
@@ -77,7 +71,7 @@ const MainTabs = () => {
         component={NotificationScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon mark="NT" label="Notif." focused={focused} />
+            <TabIcon label="Notif." focused={focused} />
           ),
         }}
       />
@@ -86,7 +80,7 @@ const MainTabs = () => {
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon mark="PE" label="Perfil" focused={focused} />
+            <TabIcon label="Perfil" focused={focused} />
           ),
         }}
       />
@@ -155,12 +149,12 @@ const styles = StyleSheet.create({
   splashLogo: {
     width: 72,
     height: 72,
-    borderRadius: 18,
-    backgroundColor: colors.ink,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  splashLogoText: { color: colors.surface, fontSize: 24, fontWeight: '800' },
+  splashLogoText: { color: '#fff', fontSize: 24, fontWeight: '900' },
   loader: { marginTop: 24 },
   splashText: { marginTop: 12, color: colors.muted, fontSize: 14 },
 });
@@ -170,46 +164,32 @@ const tabStyles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.line,
-    height: 68,
-    paddingBottom: 9,
-    paddingTop: 7,
-    ...shadow,
+    height: 72,
+    paddingBottom: 10,
+    paddingTop: 10,
+    paddingHorizontal: 4,
   },
   iconContainer: {
-    width: 74,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  mark: {
-    width: 30,
-    height: 22,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  markFocused: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  markText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.muted,
-  },
-  markTextFocused: {
-    color: colors.surface,
+    minWidth: 60,
+    paddingHorizontal: 4,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.muted,
-    marginTop: 3,
     fontWeight: '600',
   },
   labelFocused: {
     color: colors.primaryDark,
+    fontWeight: '800',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+    marginTop: 4,
   },
 });
 
