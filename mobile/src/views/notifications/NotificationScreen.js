@@ -145,7 +145,7 @@ const NotificationScreen = () => {
               styles.feedbackText,
               status === 'success' ? styles.feedbackTextSuccess : styles.feedbackTextError,
             ]}>
-              {status === 'success' ? '✅  ' : '❌  '}{feedback}
+              {feedback}
             </Text>
           </View>
         ) : null}
@@ -187,12 +187,12 @@ const NotificationScreen = () => {
             <View style={styles.imagePreviewWrapper}>
               <Image source={{ uri: image.uri }} style={styles.imagePreview} />
               <TouchableOpacity style={styles.removeImageBtn} onPress={removeImage}>
-                <Text style={styles.removeImageText}>✕ Quitar</Text>
+                <Text style={styles.removeImageText}>Quitar</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity style={styles.pickImageBtn} onPress={pickImage} activeOpacity={0.8}>
-              <Text style={styles.pickImageText}>📎  Adjuntar imagen</Text>
+              <Text style={styles.pickImageText}>Adjuntar imagen</Text>
             </TouchableOpacity>
           )}
 
