@@ -1,10 +1,30 @@
 
 import apiClient from './api.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isTransientLoginError = (error) => {
+  const status = error.response?.status;
+  return !status || status >= 500;
+};
+
 const AuthService = {
 
   async login(email, password) {
-    const response = await apiClient.post('/auth/login', { email, password });
+    let response;
+
+    try {
+      response = await apiClient.post('/auth/login', { email, password });
+    } catch (error) {
+      if (!isTransientLoginError(error)) {
+        throw error;
+      }
+
+      await wait(700);
+      response = await apiClient.post('/auth/login', { email, password });
+    }
+
     const { user, token } = response.data.data;
 
     await AsyncStorage.setItem('auth_token', token);
