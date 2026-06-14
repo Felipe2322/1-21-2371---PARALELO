@@ -135,6 +135,22 @@ jobs:
         if: steps.check_lambda.outputs.exists == 'false'
         run: terraform apply -auto-approve tfplan
 
+      # Actualizar SNS_TOPIC_ARN en la Lambda principal (siempre)
+      - name: Actualizar variables de entorno Lambda principal
+        run: |
+          SNS_ARN=$(aws sns list-topics --region ${{ secrets.AWS_REGION }} \
+            --query "Topics[?contains(TopicArn,'app-felix-notifications')].TopicArn" \
+            --output text)
+          if [ -n "$SNS_ARN" ]; then
+            echo "🔧 Actualizando SNS_TOPIC_ARN en Lambda principal: $SNS_ARN"
+            aws lambda update-function-configuration \
+              --function-name app-felix-api-production \
+              --region ${{ secrets.AWS_REGION }} \
+              --environment "Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},JWT_EXPIRES_IN=7d,S3_BUCKET=app-felix-uploads-production,AWS_S3_REGION=${{ secrets.AWS_REGION }},UPLOAD_DIR=uploads,SNS_TOPIC_ARN=$SNS_ARN}" \
+              > /dev/null
+            echo "✅ SNS_TOPIC_ARN actualizado"
+          fi
+
       - name: Resumen del despliegue
         run: |
           echo "## 🚀 Terraform ejecutado exitosamente" >> $GITHUB_STEP_SUMMARY

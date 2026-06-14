@@ -13,6 +13,7 @@ import UsersScreen from '../views/users/UsersScreen';
 import UserFormScreen from '../views/users/UserFormScreen';
 import UploadScreen from '../views/upload/UploadScreen';
 import ProfileScreen from '../views/profile/ProfileScreen';
+import NotificationScreen from '../views/notifications/NotificationScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -68,6 +69,15 @@ const MainTabs = () => {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon mark="AR" label="Archivos" focused={focused} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon mark="NT" label="Notif." focused={focused} />
           ),
         }}
       />

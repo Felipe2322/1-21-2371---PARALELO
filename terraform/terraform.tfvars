@@ -16,6 +16,8 @@ lambda_timeout = 30
 
 jwt_expires_in = "7d"
 
+ses_from_email = "felixacabreragaro@gmail.com"
+
 # Dejar vacío para generar nombre automático, o definir uno:
 # s3_uploads_bucket = "app-felix-uploads-prod"
 s3_uploads_bucket = ""

@@ -215,3 +215,201 @@ resource "aws_lambda_permission" "apigw" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
 }
+
+# ============================================================
+#  NOTIFICACIONES – SNS → SQS → Lambda → SES
+# ============================================================
+
+# ------------------------------------------------------------
+# SNS Topic
+# ------------------------------------------------------------
+resource "aws_sns_topic" "notifications" {
+  name = "${var.project_name}-notifications-${var.environment}"
+
+  tags = {
+    Name = "${var.project_name}-notifications"
+  }
+}
+
+# ------------------------------------------------------------
+# SQS Queue (recibe mensajes desde SNS)
+# ------------------------------------------------------------
+resource "aws_sqs_queue" "notifications_dlq" {
+  name                      = "${var.project_name}-notifications-dlq-${var.environment}"
+  message_retention_seconds = 1209600 # 14 días
+}
+
+resource "aws_sqs_queue" "notifications" {
+  name                       = "${var.project_name}-notifications-${var.environment}"
+  visibility_timeout_seconds = 60
+  message_retention_seconds  = 86400 # 1 día
+  receive_wait_time_seconds  = 20    # Long polling
+
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.notifications_dlq.arn
+    maxReceiveCount     = 3
+  })
+
+  tags = {
+    Name = "${var.project_name}-notifications-queue"
+  }
+}
+
+# ------------------------------------------------------------
+# Suscripción SNS → SQS
+# ------------------------------------------------------------
+resource "aws_sns_topic_subscription" "sns_to_sqs" {
+  topic_arn = aws_sns_topic.notifications.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.notifications.arn
+}
+
+# Política que permite a SNS enviar mensajes a SQS
+resource "aws_sqs_queue_policy" "notifications" {
+  queue_url = aws_sqs_queue.notifications.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "sns.amazonaws.com" }
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.notifications.arn
+        Condition = {
+          ArnEquals = {
+            "aws:SourceArn" = aws_sns_topic.notifications.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
+# ------------------------------------------------------------
+# IAM – Rol para notification-lambda
+# ------------------------------------------------------------
+resource "aws_iam_role" "notification_lambda_exec" {
+  name = "${var.project_name}-notification-lambda-role-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "notification_lambda_basic" {
+  role       = aws_iam_role.notification_lambda_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Política: leer de SQS + enviar email con SES
+resource "aws_iam_role_policy" "notification_lambda_policy" {
+  name = "${var.project_name}-notification-lambda-policy"
+  role = aws_iam_role.notification_lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.notifications.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Política: la Lambda principal puede publicar en SNS
+resource "aws_iam_role_policy" "lambda_sns" {
+  name = "${var.project_name}-lambda-sns-policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.notifications.arn
+      }
+    ]
+  })
+}
+
+# ------------------------------------------------------------
+# CloudWatch Log Group para notification-lambda
+# ------------------------------------------------------------
+resource "aws_cloudwatch_log_group" "notification_lambda_logs" {
+  name              = "/aws/lambda/${var.project_name}-notification-lambda-${var.environment}"
+  retention_in_days = 30
+}
+
+# ------------------------------------------------------------
+# Lambda de Notificaciones (notification-lambda)
+# ------------------------------------------------------------
+resource "aws_lambda_function" "notification" {
+  function_name = "${var.project_name}-notification-lambda-${var.environment}"
+  description   = "Notification Lambda – SQS → SES email"
+
+  role    = aws_iam_role.notification_lambda_exec.arn
+  runtime = var.lambda_runtime
+  handler = "src/functions/notification-lambda.handler"
+
+  filename         = "${path.module}/../backend/lambda.zip"
+  source_code_hash = filebase64sha256("${path.module}/../backend/lambda.zip")
+
+  memory_size = 256
+  timeout     = 60
+
+  depends_on = [
+    aws_cloudwatch_log_group.notification_lambda_logs,
+    aws_iam_role_policy_attachment.notification_lambda_basic,
+  ]
+
+  environment {
+    variables = {
+      NODE_ENV       = "production"
+      AWS_SES_REGION = var.aws_region
+      SES_FROM_EMAIL = var.ses_from_email
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-notification-lambda"
+  }
+}
+
+# ------------------------------------------------------------
+# Event Source Mapping: SQS → notification-lambda
+# ------------------------------------------------------------
+resource "aws_lambda_event_source_mapping" "sqs_to_notification_lambda" {
+  event_source_arn = aws_sqs_queue.notifications.arn
+  function_name    = aws_lambda_function.notification.arn
+  batch_size       = 5
+  enabled          = true
+}
+
+# ------------------------------------------------------------
+# Actualizar Lambda principal con SNS_TOPIC_ARN
+# ------------------------------------------------------------
+# (la variable se inyecta en el environment de la Lambda principal
+#  via update-function-configuration en el pipeline)

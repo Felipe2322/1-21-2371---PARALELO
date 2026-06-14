@@ -57,3 +57,9 @@ variable "s3_uploads_bucket" {
   type        = string
   default     = ""
 }
+
+variable "ses_from_email" {
+  description = "Email verificado en SES usado como remitente"
+  type        = string
+  default     = "no-reply@felixcabrera.dev"
+}

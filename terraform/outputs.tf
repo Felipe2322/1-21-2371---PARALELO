@@ -36,3 +36,23 @@ output "health_check_url" {
   description = "Endpoint de health check de la API"
   value       = "${aws_apigatewayv2_api.http_api.api_endpoint}/health"
 }
+
+output "sns_topic_arn" {
+  description = "ARN del SNS Topic de notificaciones"
+  value       = aws_sns_topic.notifications.arn
+}
+
+output "sqs_queue_url" {
+  description = "URL de la SQS Queue de notificaciones"
+  value       = aws_sqs_queue.notifications.id
+}
+
+output "notification_lambda_name" {
+  description = "Nombre de la Lambda de notificaciones"
+  value       = aws_lambda_function.notification.function_name
+}
+
+output "notification_lambda_log_group" {
+  description = "CloudWatch log group de notification-lambda"
+  value       = aws_cloudwatch_log_group.notification_lambda_logs.name
+}

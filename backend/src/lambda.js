@@ -11,11 +11,12 @@ const cors = require('cors');
 const path = require('path');
 const { sequelize } = require('./config/database');
 
-const authRoutes    = require('./routes/auth.routes');
-const userRoutes    = require('./routes/user.routes');
-const uploadRoutes  = require('./routes/upload.routes');
-const profileRoutes = require('./routes/profile.routes');
-const configRoutes  = require('./routes/config.routes');
+const authRoutes         = require('./routes/auth.routes');
+const userRoutes         = require('./routes/user.routes');
+const uploadRoutes       = require('./routes/upload.routes');
+const profileRoutes      = require('./routes/profile.routes');
+const configRoutes       = require('./routes/config.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 
@@ -27,12 +28,13 @@ app.use(express.urlencoded({ extended: true }));
 // como fallback para desarrollo.
 app.use('/uploads', express.static(path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads')));
 
-app.use('/api/auth',    authRoutes);
-app.use('/api/users',   userRoutes);
-app.use('/api/upload',  uploadRoutes);
-app.use('/upload',      uploadRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/config',  configRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/users',         userRoutes);
+app.use('/api/upload',        uploadRoutes);
+app.use('/upload',            uploadRoutes);
+app.use('/api/profile',       profileRoutes);
+app.use('/api/config',        configRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
