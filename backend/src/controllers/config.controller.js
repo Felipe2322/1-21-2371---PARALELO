@@ -3,7 +3,7 @@ const getConfig = async (req, res) => {
   try {
     const config = {
       appName: 'API Felix Cabrera',
-      version: '2.2',
+      version: '3.2',
       features: {
         fileUpload: true,
         userManagement: true,
