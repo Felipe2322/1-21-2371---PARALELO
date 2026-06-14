@@ -9,24 +9,55 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
-import { colors, radius, shadow, type } from '../../styles/theme';
+import * as ImagePicker from 'expo-image-picker';
+import { colors, radius, shadow } from '../../styles/theme';
 import apiClient from '../../services/api.service';
 
 const NotificationScreen = () => {
   const [email,   setEmail]   = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [image,   setImage]   = useState(null); // { uri, base64, name }
 
   const [isLoading, setIsLoading] = useState(false);
-  const [status,    setStatus]    = useState(null); // 'success' | 'error'
+  const [status,    setStatus]    = useState(null);
   const [feedback,  setFeedback]  = useState('');
 
+  const pickImage = async () => {
+    const { status: perm } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (perm !== 'granted') {
+      setStatus('error');
+      setFeedback('Se necesita permiso para acceder a la galería.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      const asset = result.assets[0];
+      const ext   = asset.uri.split('.').pop() || 'jpg';
+      setImage({
+        uri:    asset.uri,
+        base64: asset.base64,
+        name:   `imagen.${ext}`,
+        type:   asset.mimeType || `image/${ext}`,
+      });
+    }
+  };
+
+  const removeImage = () => setImage(null);
+
   const handleSend = async () => {
-    // Validación básica
     if (!email.trim() || !subject.trim() || !message.trim()) {
       setStatus('error');
-      setFeedback('Por favor completá todos los campos.');
+      setFeedback('Completá todos los campos.');
       return;
     }
 
@@ -42,11 +73,21 @@ const NotificationScreen = () => {
     setFeedback('');
 
     try {
-      const response = await apiClient.post('/notifications/send', {
+      const body = {
         email:   email.trim(),
         subject: subject.trim(),
         message: message.trim(),
-      });
+      };
+
+      if (image?.base64) {
+        body.image = {
+          data:     image.base64,
+          name:     image.name,
+          mimeType: image.type,
+        };
+      }
+
+      const response = await apiClient.post('/notifications/send', body);
 
       if (response.data.success) {
         setStatus('success');
@@ -54,15 +95,14 @@ const NotificationScreen = () => {
         setEmail('');
         setSubject('');
         setMessage('');
+        setImage(null);
       } else {
         setStatus('error');
         setFeedback(response.data.message || 'Error al enviar mensaje.');
       }
     } catch (error) {
       setStatus('error');
-      setFeedback(
-        error.response?.data?.message || 'Error al enviar mensaje.'
-      );
+      setFeedback(error.response?.data?.message || 'Error al enviar mensaje.');
     } finally {
       setIsLoading(false);
     }
@@ -76,29 +116,12 @@ const NotificationScreen = () => {
       <ScrollView
         style={styles.container}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 48 }}
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.kicker}>AWS SNS + SES</Text>
-          <Text style={styles.title}>Enviar Notificación</Text>
-        </View>
-
-        {/* Flujo informativo */}
-        <View style={styles.flowCard}>
-          <Text style={styles.flowTitle}>Flujo de envío</Text>
-          <View style={styles.flowRow}>
-            {['App', 'Backend', 'SNS', 'SQS', 'Lambda', 'Email'].map((step, i, arr) => (
-              <React.Fragment key={step}>
-                <View style={styles.flowStep}>
-                  <Text style={styles.flowStepText}>{step}</Text>
-                </View>
-                {i < arr.length - 1 && (
-                  <Text style={styles.flowArrow}>→</Text>
-                )}
-              </React.Fragment>
-            ))}
-          </View>
+          <Text style={styles.kicker}>Notificaciones</Text>
+          <Text style={styles.title}>Enviar correo</Text>
         </View>
 
         {/* Feedback */}
@@ -111,18 +134,17 @@ const NotificationScreen = () => {
               styles.feedbackText,
               status === 'success' ? styles.feedbackTextSuccess : styles.feedbackTextError,
             ]}>
-              {status === 'success' ? '✅ ' : '❌ '}{feedback}
+              {status === 'success' ? '✅  ' : '❌  '}{feedback}
             </Text>
           </View>
         ) : null}
 
         {/* Formulario */}
         <View style={styles.form}>
-          <Text style={styles.label}>Correo destino</Text>
+
+          <Text style={styles.label}>Para</Text>
           <TextInput
             style={styles.input}
-            placeholder="usuario@correo.com"
-            placeholderTextColor={colors.muted}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -133,8 +155,6 @@ const NotificationScreen = () => {
           <Text style={styles.label}>Asunto</Text>
           <TextInput
             style={styles.input}
-            placeholder="Prueba SNS"
-            placeholderTextColor={colors.muted}
             value={subject}
             onChangeText={setSubject}
           />
@@ -142,8 +162,6 @@ const NotificationScreen = () => {
           <Text style={styles.label}>Mensaje</Text>
           <TextInput
             style={[styles.input, styles.inputMultiline]}
-            placeholder="Hola desde AWS Serverless"
-            placeholderTextColor={colors.muted}
             value={message}
             onChangeText={setMessage}
             multiline
@@ -151,18 +169,35 @@ const NotificationScreen = () => {
             textAlignVertical="top"
           />
 
+          {/* Imagen adjunta */}
+          <Text style={styles.label}>Imagen adjunta</Text>
+
+          {image ? (
+            <View style={styles.imagePreviewWrapper}>
+              <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+              <TouchableOpacity style={styles.removeImageBtn} onPress={removeImage}>
+                <Text style={styles.removeImageText}>✕ Quitar</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.pickImageBtn} onPress={pickImage} activeOpacity={0.8}>
+              <Text style={styles.pickImageText}>📎  Adjuntar imagen</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Botón enviar */}
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleSend}
             disabled={isLoading}
             activeOpacity={0.8}
           >
-            {isLoading ? (
-              <ActivityIndicator color={colors.surface} size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Enviar Notificación</Text>
-            )}
+            {isLoading
+              ? <ActivityIndicator color={colors.surface} size="small" />
+              : <Text style={styles.buttonText}>Enviar</Text>
+            }
           </TouchableOpacity>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -194,47 +229,9 @@ const styles = StyleSheet.create({
     color: colors.ink,
     marginTop: 4,
   },
-  flowCard: {
-    margin: 16,
-    padding: 14,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-    ...shadow,
-  },
-  flowTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.muted,
-    textTransform: 'uppercase',
-    marginBottom: 10,
-  },
-  flowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  flowStep: {
-    backgroundColor: colors.primarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radius.sm,
-  },
-  flowStepText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: colors.primaryDark,
-  },
-  flowArrow: {
-    fontSize: 12,
-    color: colors.muted,
-    fontWeight: '700',
-  },
   feedback: {
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginTop: 16,
     padding: 12,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -247,10 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerSoft,
     borderColor: '#F7B4AE',
   },
-  feedbackText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  feedbackText: { fontSize: 14, fontWeight: '600' },
   feedbackTextSuccess: { color: colors.success },
   feedbackTextError:   { color: colors.danger },
   form: {
@@ -267,7 +261,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.inkSoft,
     marginBottom: 6,
-    marginTop: 12,
+    marginTop: 14,
   },
   input: {
     borderWidth: 1,
@@ -283,17 +277,49 @@ const styles = StyleSheet.create({
     minHeight: 110,
     paddingTop: 10,
   },
+  pickImageBtn: {
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    borderStyle: 'dashed',
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  pickImageText: {
+    fontSize: 14,
+    color: colors.inkSoft,
+    fontWeight: '600',
+  },
+  imagePreviewWrapper: {
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
+  },
+  removeImageBtn: {
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: colors.dangerSoft,
+  },
+  removeImageText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.danger,
+  },
   button: {
     marginTop: 20,
     backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: 14,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: {
     color: colors.surface,
     fontSize: 15,

@@ -38,7 +38,7 @@ const sendNotification = async (req, res) => {
     }
 
     // Publicar en SNS
-    const payload = JSON.stringify({ email, subject, message });
+    const payload = JSON.stringify({ email, subject, message, image: req.body.image || null });
 
     const command = new PublishCommand({
       TopicArn: topicArn,
