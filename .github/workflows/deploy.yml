@@ -136,6 +136,15 @@ jobs:
 
           import_if_missing "aws_lambda_permission.apigw" \
             "app-felix-api-production/AllowAPIGatewayInvoke"
+
+          import_if_missing "aws_iam_role.notification_lambda_exec" \
+            "app-felix-notification-lambda-role-production"
+
+          import_if_missing "aws_cloudwatch_log_group.notification_lambda_logs" \
+            "/aws/lambda/app-felix-notification-lambda-production"
+
+          import_if_missing "aws_lambda_function.notification" \
+            "app-felix-notification-lambda-production"
         env:
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
