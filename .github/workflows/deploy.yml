@@ -133,6 +133,9 @@ jobs:
 
           import_if_missing "aws_lambda_function.api" \
             "app-felix-api-production"
+
+          import_if_missing "aws_lambda_permission.apigw" \
+            "app-felix-api-production/AllowAPIGatewayInvoke"
         env:
           TF_VAR_database_url: ${{ secrets.DATABASE_URL }}
           TF_VAR_jwt_secret:   ${{ secrets.JWT_SECRET }}
