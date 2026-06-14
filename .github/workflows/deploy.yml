@@ -158,6 +158,8 @@ jobs:
             "app-felix-lambda-role-production:app-felix-lambda-s3-policy"
           import_if_missing "aws_iam_role_policy.lambda_sns" \
             "app-felix-lambda-role-production:app-felix-lambda-sns-policy"
+          import_if_missing "aws_iam_role_policy.lambda_ses" \
+            "app-felix-lambda-role-production:app-felix-lambda-ses-policy"
           import_if_missing "aws_iam_role_policy.notification_lambda_policy" \
             "app-felix-notification-lambda-role-production:app-felix-notification-lambda-policy"
 
@@ -256,7 +258,7 @@ jobs:
             aws lambda update-function-configuration \
               --function-name app-felix-api-production \
               --region ${{ secrets.AWS_REGION }} \
-              --environment "Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},JWT_EXPIRES_IN=7d,S3_BUCKET=app-felix-uploads-production,AWS_S3_REGION=${{ secrets.AWS_REGION }},UPLOAD_DIR=uploads,SNS_TOPIC_ARN=$SNS_ARN}" \
+              --environment "Variables={NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }},JWT_EXPIRES_IN=7d,S3_BUCKET=app-felix-uploads-production,AWS_S3_REGION=${{ secrets.AWS_REGION }},UPLOAD_DIR=uploads,SNS_TOPIC_ARN=$SNS_ARN,AWS_SES_REGION=${{ secrets.AWS_REGION }},SES_FROM_EMAIL=${{ secrets.SES_FROM_EMAIL }}}" \
               > /dev/null
             echo "✅ SNS_TOPIC_ARN actualizado"
           fi

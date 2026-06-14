@@ -11,7 +11,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useUserViewModel } from '../../viewmodels/UserViewModel';
-import { colors, radius, shadow, type } from '../../styles/theme';
+import { colors, radius, type } from '../../styles/theme';
 
 const UserCard = ({ user, onEdit, onDelete }) => (
   <View style={styles.userCard}>
@@ -98,7 +98,7 @@ const UsersScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Usuarios</Text>
-          <Text style={styles.subtitle}>Altas, roles y estado de acceso.</Text>
+          <Text style={styles.subtitle}>Altas, roles y estado de acceso</Text>
         </View>
         <TouchableOpacity style={styles.newButton} onPress={() => navigation.navigate('UserForm', { user: null })}>
           <Text style={styles.newButtonText}>Nuevo</Text>
@@ -179,11 +179,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
+    paddingTop: 56,
+    paddingBottom: 18,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -193,12 +190,14 @@ const styles = StyleSheet.create({
   newButton: {
     minWidth: 72,
     minHeight: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    borderRadius: 14,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: '#3B365B',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  newButtonText: { color: colors.surface, fontSize: 14, fontWeight: '800' },
+  newButtonText: { color: colors.primaryDark, fontSize: 14, fontWeight: '800' },
   searchRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
@@ -210,7 +209,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 46,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 16,
     paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: colors.line,
@@ -220,7 +219,7 @@ const styles = StyleSheet.create({
   searchButton: {
     minWidth: 76,
     minHeight: 46,
-    borderRadius: radius.md,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.primary,
     alignItems: 'center',
@@ -238,22 +237,21 @@ const styles = StyleSheet.create({
     borderColor: '#F7B4AE',
   },
   errorText: { color: colors.danger, fontSize: 13, fontWeight: '600' },
-  list: { paddingHorizontal: 16, paddingBottom: 16 },
+  list: { paddingHorizontal: 16, paddingBottom: 112 },
   userCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 12,
-    marginBottom: 10,
+    padding: 13,
+    marginBottom: 11,
     flexDirection: 'row',
     alignItems: 'center',
-    ...shadow,
   },
   avatar: {
     width: 42,
     height: 42,
-    borderRadius: radius.md,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -301,6 +299,7 @@ const styles = StyleSheet.create({
   footerLoader: { padding: 16 },
   paginationInfo: {
     padding: 12,
+    paddingBottom: 96,
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: colors.line,

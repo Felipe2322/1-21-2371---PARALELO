@@ -2,9 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { colors, radius, shadow } from '../styles/theme';
+import { colors } from '../styles/theme';
 
 import LoginScreen from '../views/auth/LoginScreen';
 import RegisterScreen from '../views/auth/RegisterScreen';
@@ -18,15 +18,68 @@ import NotificationScreen from '../views/notifications/NotificationScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ label, focused }) => (
-  <View style={tabStyles.iconContainer}>
-    <View style={[tabStyles.pill, focused && tabStyles.pillFocused]}>
-      <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>
-        {label}
-      </Text>
+const TabGlyph = ({ name, focused }) => {
+  const tone = focused ? tabStyles.glyphActive : tabStyles.glyphIdle;
+  const line = focused ? tabStyles.glyphLineActive : tabStyles.glyphLineIdle;
+
+  if (name === 'home') {
+    return (
+      <View style={tabStyles.glyphBox}>
+        <View style={[tabStyles.homeRoof, line]} />
+        <View style={[tabStyles.homeBase, tone]} />
+      </View>
+    );
+  }
+
+  if (name === 'users') {
+    return (
+      <View style={tabStyles.glyphBox}>
+        <View style={[tabStyles.userBack, line]} />
+        <View style={[tabStyles.userHead, tone]} />
+        <View style={[tabStyles.userBody, tone]} />
+      </View>
+    );
+  }
+
+  if (name === 'files') {
+    return (
+      <View style={tabStyles.glyphBox}>
+        <View style={[tabStyles.fileTab, line]} />
+        <View style={[tabStyles.fileBody, tone]} />
+      </View>
+    );
+  }
+
+  if (name === 'bell') {
+    return (
+      <View style={tabStyles.glyphBox}>
+        <View style={[tabStyles.bellDome, tone]} />
+        <View style={[tabStyles.bellBase, line]} />
+        <View style={[tabStyles.bellDot, tone]} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={tabStyles.glyphBox}>
+      <View style={[tabStyles.profileHead, tone]} />
+      <View style={[tabStyles.profileBody, line]} />
     </View>
+  );
+};
+
+const TabIcon = ({ label, icon, focused }) => (
+  <View style={[tabStyles.item, focused && tabStyles.itemFocused]}>
+    <View style={[tabStyles.iconPlate, focused && tabStyles.iconPlateFocused]}>
+      <TabGlyph name={icon} focused={focused} />
+    </View>
+    <Text numberOfLines={1} style={[tabStyles.label, focused && tabStyles.labelFocused]}>
+      {label}
+    </Text>
   </View>
-);const MainTabs = () => {
+);
+
+const MainTabs = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -43,7 +96,7 @@ const TabIcon = ({ label, focused }) => (
         component={DashboardScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Inicio" focused={focused} />
+            <TabIcon label="Inicio" icon="home" focused={focused} />
           ),
         }}
       />
@@ -53,7 +106,7 @@ const TabIcon = ({ label, focused }) => (
           component={UsersScreen}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabIcon label="Usuarios" focused={focused} />
+              <TabIcon label="Usuarios" icon="users" focused={focused} />
             ),
           }}
         />
@@ -63,7 +116,7 @@ const TabIcon = ({ label, focused }) => (
         component={UploadScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Archivos" focused={focused} />
+            <TabIcon label="Archivos" icon="files" focused={focused} />
           ),
         }}
       />
@@ -72,7 +125,7 @@ const TabIcon = ({ label, focused }) => (
         component={NotificationScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Notif." focused={focused} />
+            <TabIcon label="Avisos" icon="bell" focused={focused} />
           ),
         }}
       />
@@ -81,7 +134,7 @@ const TabIcon = ({ label, focused }) => (
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Perfil" focused={focused} />
+            <TabIcon label="Perfil" icon="profile" focused={focused} />
           ),
         }}
       />
@@ -162,35 +215,155 @@ const styles = StyleSheet.create({
 
 const tabStyles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    height: 68,
-    paddingBottom: 10,
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: Platform.OS === 'ios' ? 18 : 12,
+    height: 76,
+    backgroundColor: '#171A24',
+    borderWidth: 1,
+    borderColor: '#303449',
+    borderRadius: 24,
     paddingTop: 8,
-    paddingHorizontal: 6,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 12,
   },
-  iconContainer: {
-    flex: 1,
+  item: {
+    width: 66,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    gap: 4,
+  },
+  itemFocused: {
+    backgroundColor: '#222034',
+  },
+  iconPlate: {
+    width: 30,
+    height: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  pillFocused: {
-    backgroundColor: colors.primarySoft,
-  },
+  iconPlateFocused: {},
   label: {
-    fontSize: 12,
-    color: colors.muted,
-    fontWeight: '600',
+    width: 62,
+    color: '#747891',
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   labelFocused: {
-    color: colors.primaryDark,
-    fontWeight: '800',
+    color: '#D8D1FF',
+  },
+  glyphBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glyphActive: {
+    backgroundColor: '#9B8CFF',
+    borderColor: '#9B8CFF',
+  },
+  glyphIdle: {
+    backgroundColor: '#6F738A',
+    borderColor: '#6F738A',
+  },
+  glyphLineActive: {
+    backgroundColor: '#C9C1FF',
+    borderColor: '#C9C1FF',
+  },
+  glyphLineIdle: {
+    backgroundColor: '#555A71',
+    borderColor: '#555A71',
+  },
+  homeRoof: {
+    width: 14,
+    height: 14,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    transform: [{ rotate: '45deg' }],
+    borderRadius: 2,
+    marginBottom: -8,
+  },
+  homeBase: {
+    width: 15,
+    height: 12,
+    borderRadius: 4,
+  },
+  userBack: {
+    position: 'absolute',
+    left: 3,
+    top: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  userHead: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    marginTop: 3,
+  },
+  userBody: {
+    width: 17,
+    height: 9,
+    borderRadius: 8,
+    marginTop: 2,
+  },
+  fileTab: {
+    width: 10,
+    height: 5,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+    alignSelf: 'flex-start',
+    marginLeft: 4,
+    marginBottom: -1,
+  },
+  fileBody: {
+    width: 18,
+    height: 15,
+    borderRadius: 5,
+  },
+  bellDome: {
+    width: 15,
+    height: 14,
+    borderTopLeftRadius: 9,
+    borderTopRightRadius: 9,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    marginTop: 3,
+  },
+  bellBase: {
+    width: 18,
+    height: 3,
+    borderRadius: 3,
+    marginTop: -1,
+  },
+  bellDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 1,
+  },
+  profileHead: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 2,
+  },
+  profileBody: {
+    width: 18,
+    height: 9,
+    borderRadius: 9,
+    marginTop: 3,
   },
 });
 

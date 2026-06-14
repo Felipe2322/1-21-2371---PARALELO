@@ -1,18 +1,18 @@
 /**
  * notification.controller.js
- * Controlador para publicar mensajes en SNS
- * POST /api/notifications/send
+ * Publica correos simples en SNS y envia correos con imagen directo por SES.
  */
 
 const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
+const { sendRawNotification } = require('../services/email.service');
 
 const sns = new SNSClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const MAX_IMAGE_BASE64_BYTES = 7 * 1024 * 1024;
 
 const sendNotification = async (req, res) => {
   try {
-    const { email, subject, message } = req.body;
+    const { email, subject, message, image } = req.body;
 
-    // Validación
     if (!email || !subject || !message) {
       return res.status(400).json({
         success: false,
@@ -20,12 +20,37 @@ const sendNotification = async (req, res) => {
       });
     }
 
-    // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'El formato del email no es válido',
+        message: 'El formato del email no es valido',
+      });
+    }
+
+    if (image?.data) {
+      const imageBytes = Buffer.byteLength(image.data, 'base64');
+      if (imageBytes > MAX_IMAGE_BASE64_BYTES) {
+        return res.status(413).json({
+          success: false,
+          message: 'La imagen es muy grande. Usa una imagen menor a 7MB.',
+        });
+      }
+
+      const response = await sendRawNotification({
+        to: email,
+        subject,
+        message,
+        image,
+      });
+
+      console.log(`Email con imagen enviado por SES. MessageId: ${response.MessageId}`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Notificacion enviada exitosamente',
+        messageId: response.MessageId,
+        transport: 'ses',
       });
     }
 
@@ -37,31 +62,28 @@ const sendNotification = async (req, res) => {
       });
     }
 
-    // Publicar en SNS
-    const payload = JSON.stringify({ email, subject, message, image: req.body.image || null });
-
+    const payload = JSON.stringify({ email, subject, message, image: null });
     const command = new PublishCommand({
       TopicArn: topicArn,
-      Message:  payload,
-      Subject:  subject,
+      Message: payload,
+      Subject: subject,
     });
 
     const response = await sns.send(command);
+    console.log(`Mensaje publicado en SNS. MessageId: ${response.MessageId}`);
 
-    console.log(`✅ Mensaje publicado en SNS. MessageId: ${response.MessageId}`);
-
-    res.status(200).json({
-      success:   true,
-      message:   'Notificación enviada exitosamente',
+    return res.status(200).json({
+      success: true,
+      message: 'Notificacion enviada exitosamente',
       messageId: response.MessageId,
+      transport: 'sns',
     });
-
   } catch (error) {
-    console.error('Error publicando en SNS:', error.message);
-    res.status(500).json({
+    console.error('Error enviando notificacion:', error.message);
+    return res.status(500).json({
       success: false,
-      message: 'Error al enviar la notificación',
-      error:   process.env.NODE_ENV === 'development' ? error.message : undefined,
+      message: 'Error al enviar la notificacion',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

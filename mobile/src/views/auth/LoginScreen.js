@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { colors, radius, shadow } from '../../styles/theme';
+import { colors } from '../../styles/theme';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -97,34 +97,34 @@ const LoginScreen = ({ navigation }) => {
 
 const s = StyleSheet.create({
   root:   { flex: 1, backgroundColor: colors.background },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 32 },
 
   logoWrap: { alignItems: 'center', marginBottom: 32 },
   logo: {
-    width: 64, height: 64, borderRadius: radius.lg,
-    backgroundColor: colors.primary,
+    width: 64, height: 64, borderRadius: 22,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: '#3B365B',
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-    ...shadow,
   },
-  logoText: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  logoText: { color: colors.primaryDark, fontSize: 22, fontWeight: '900' },
   appName:  { color: colors.ink, fontSize: 18, fontWeight: '800' },
   appSub:   { color: colors.muted, fontSize: 13, marginTop: 2 },
 
-  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: 0 },
   sub:   { color: colors.inkSoft, fontSize: 14, marginTop: 6, marginBottom: 28 },
 
   form: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
     borderColor: colors.line,
-    ...shadow,
   },
   label: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: {
     backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.line,
     paddingHorizontal: 14,
@@ -138,7 +138,7 @@ const s = StyleSheet.create({
   btn: {
     marginTop: 24,
     backgroundColor: colors.primary,
-    borderRadius: radius.sm,
+    borderRadius: 14,
     paddingVertical: 15,
     alignItems: 'center',
   },

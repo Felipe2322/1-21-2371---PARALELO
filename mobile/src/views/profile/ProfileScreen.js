@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import ProfileService from '../../services/profile.service';
-import { colors, radius, shadow } from '../../styles/theme';
+import { colors } from '../../styles/theme';
 
 const ProfileScreen = () => {
   const { user, logout, updateUser } = useAuth();
@@ -52,7 +52,6 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={s.root}>
 
-      {/* Header */}
       <View style={s.header}>
         <View style={s.avatar}>
           <Text style={s.avatarTxt}>{initials}</Text>
@@ -64,7 +63,6 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      {/* Datos */}
       <View style={s.section}>
         <View style={s.sectionHead}>
           <Text style={s.sectionLabel}>Datos</Text>
@@ -96,7 +94,6 @@ const ProfileScreen = () => {
         )}
       </View>
 
-      {/* Seguridad */}
       <View style={s.section}>
         <View style={s.sectionHead}>
           <Text style={s.sectionLabel}>Seguridad</Text>
@@ -126,12 +123,11 @@ const ProfileScreen = () => {
         )}
       </View>
 
-      {/* Logout */}
       <TouchableOpacity style={s.logoutBtn} onPress={confirmLogout}>
         <Text style={s.logoutTxt}>Cerrar sesión</Text>
       </TouchableOpacity>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: 112 }} />
     </ScrollView>
   );
 };
@@ -139,9 +135,9 @@ const ProfileScreen = () => {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
 
-  header: { alignItems: 'center', paddingTop: 52, paddingBottom: 24, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.line },
-  avatar:    { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  avatarTxt: { color: '#fff', fontSize: 24, fontWeight: '900' },
+  header: { alignItems: 'center', paddingTop: 56, paddingBottom: 24 },
+  avatar:    { width: 76, height: 76, borderRadius: 24, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: '#3B365B', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  avatarTxt: { color: colors.primaryDark, fontSize: 24, fontWeight: '900' },
   name:      { color: colors.ink, fontSize: 20, fontWeight: '800' },
   email:     { color: colors.muted, fontSize: 13, marginTop: 4 },
   pill:      { backgroundColor: colors.primarySoft, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginTop: 10 },
@@ -152,7 +148,7 @@ const s = StyleSheet.create({
   sectionLabel:{ color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
   link:        { color: colors.primaryDark, fontSize: 13, fontWeight: '700' },
 
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', ...shadow },
+  card: { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
 
   row:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.line },
   rowKey:      { color: colors.inkSoft, fontSize: 13 },
@@ -161,14 +157,14 @@ const s = StyleSheet.create({
 
   inputGroup: { paddingHorizontal: 14, paddingTop: 14 },
   inputLabel: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 },
-  input:      { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.ink },
+  input:      { backgroundColor: colors.surfaceMuted, borderRadius: 14, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.ink },
 
-  btn:      { marginTop: 14, backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center' },
+  btn:      { marginTop: 14, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   btnInside:{ margin: 14, marginTop: 14 },
   btnOff:   { opacity: 0.6 },
   btnTxt:   { color: '#fff', fontSize: 14, fontWeight: '800' },
 
-  logoutBtn: { margin: 16, marginTop: 8, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.dangerSoft, borderWidth: 1, borderColor: colors.danger + '50' },
+  logoutBtn: { margin: 16, marginTop: 8, borderRadius: 14, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.dangerSoft, borderWidth: 1, borderColor: colors.danger + '50' },
   logoutTxt: { color: colors.danger, fontSize: 15, fontWeight: '800' },
 });
 

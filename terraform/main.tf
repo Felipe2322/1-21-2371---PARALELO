@@ -157,6 +157,8 @@ resource "aws_lambda_function" "api" {
       S3_BUCKET      = aws_s3_bucket.uploads.bucket
       AWS_S3_REGION  = var.aws_region
       UPLOAD_DIR     = "uploads"
+      AWS_SES_REGION  = var.aws_region
+      SES_FROM_EMAIL  = var.ses_from_email
     }
   }
 
@@ -350,6 +352,26 @@ resource "aws_iam_role_policy" "lambda_sns" {
         Effect   = "Allow"
         Action   = ["sns:Publish"]
         Resource = aws_sns_topic.notifications.arn
+      }
+    ]
+  })
+}
+
+# Politica: la Lambda principal puede enviar correos con adjuntos por SES
+resource "aws_iam_role_policy" "lambda_ses" {
+  name = "${var.project_name}-lambda-ses-policy"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*"
       }
     ]
   })

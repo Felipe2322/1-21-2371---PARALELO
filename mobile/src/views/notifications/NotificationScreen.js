@@ -12,7 +12,8 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { colors, radius, shadow } from '../../styles/theme';
+import * as FileSystem from 'expo-file-system';
+import { colors } from '../../styles/theme';
 import apiClient from '../../services/api.service';
 
 const NotificationScreen = () => {
@@ -42,10 +43,14 @@ const NotificationScreen = () => {
 
     if (!result.canceled && result.assets?.length > 0) {
       const asset = result.assets[0];
-      const ext   = asset.uri.split('.').pop() || 'jpg';
+      const ext = asset.uri.split('.').pop() || 'jpg';
+      const base64 = asset.base64 || await FileSystem.readAsStringAsync(asset.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
       setImage({
         uri:    asset.uri,
-        base64: asset.base64,
+        base64,
         name:   `imagen.${ext}`,
         type:   asset.mimeType || `image/${ext}`,
       });
@@ -78,6 +83,12 @@ const NotificationScreen = () => {
         subject: subject.trim(),
         message: message.trim(),
       };
+
+      if (image && !image.base64) {
+        setStatus('error');
+        setFeedback('No se pudo preparar la imagen adjunta.');
+        return;
+      }
 
       if (image?.base64) {
         body.image = {
@@ -116,7 +127,7 @@ const NotificationScreen = () => {
       <ScrollView
         style={styles.container}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 48 }}
+        contentContainerStyle={{ paddingBottom: 112 }}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -211,11 +222,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
+    paddingTop: 56,
+    paddingBottom: 18,
   },
   kicker: {
     fontSize: 12,
@@ -233,7 +241,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 16,
     padding: 12,
-    borderRadius: radius.md,
+    borderRadius: 16,
     borderWidth: 1,
   },
   feedbackSuccess: {
@@ -250,11 +258,10 @@ const styles = StyleSheet.create({
   form: {
     margin: 16,
     padding: 16,
-    borderRadius: radius.md,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-    ...shadow,
   },
   label: {
     fontSize: 13,
@@ -266,7 +273,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
@@ -280,7 +287,7 @@ const styles = StyleSheet.create({
   pickImageBtn: {
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
+    borderRadius: 16,
     borderStyle: 'dashed',
     paddingVertical: 14,
     alignItems: 'center',
@@ -292,7 +299,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   imagePreviewWrapper: {
-    borderRadius: radius.md,
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.line,
@@ -315,7 +322,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },

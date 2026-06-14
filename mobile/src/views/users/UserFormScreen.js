@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { useUserViewModel } from '../../viewmodels/UserViewModel';
-import { colors, radius, shadow, type } from '../../styles/theme';
+import { colors, type } from '../../styles/theme';
 
 const UserFormScreen = ({ route, navigation }) => {
   const { user } = route.params || {};
@@ -206,17 +206,16 @@ const UserFormScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 20, paddingBottom: 112 },
   intro: { marginBottom: 16 },
   title: { ...type.title, fontSize: 24 },
   subtitle: { ...type.body, marginTop: 5 },
   panel: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
     padding: 16,
-    ...shadow,
   },
   inputGroup: { marginBottom: 15 },
   label: { ...type.label, marginBottom: 7 },
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
+    borderRadius: 14,
     paddingHorizontal: 12,
     fontSize: 15,
     color: colors.ink,
@@ -236,7 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderWidth: 1,
     borderColor: colors.line,
-    borderRadius: radius.md,
+    borderRadius: 14,
     overflow: 'hidden',
     backgroundColor: colors.surfaceMuted,
   },
@@ -246,9 +245,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  segmentSelected: { backgroundColor: colors.primary },
+  segmentSelected: { backgroundColor: colors.primarySoft },
   segmentText: { color: colors.inkSoft, fontSize: 13, fontWeight: '800' },
-  segmentTextSelected: { color: colors.surface },
+  segmentTextSelected: { color: colors.primaryDark },
   switchRow: {
     minHeight: 60,
     flexDirection: 'row',
@@ -261,7 +260,7 @@ const styles = StyleSheet.create({
   switchHint: { color: colors.muted, fontSize: 12 },
   submitButton: {
     minHeight: 48,
-    borderRadius: radius.md,
+    borderRadius: 14,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

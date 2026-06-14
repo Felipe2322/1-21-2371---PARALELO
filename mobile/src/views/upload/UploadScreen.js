@@ -11,7 +11,7 @@ import {
   Linking,
 } from 'react-native';
 import { useUploadViewModel } from '../../viewmodels/UploadViewModel';
-import { colors, radius, shadow, type } from '../../styles/theme';
+import { colors, radius, type } from '../../styles/theme';
 
 const ProgressBar = ({ progress }) => (
   <View style={styles.progressContainer}>
@@ -119,7 +119,7 @@ const UploadScreen = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Archivos</Text>
-        <Text style={styles.subtitle}>Sube imagenes, fotos o documentos del usuario.</Text>
+        <Text style={styles.subtitle}>Sube imagenes, fotos o documentos del usuario</Text>
       </View>
 
       <View style={styles.pickerPanel}>
@@ -215,11 +215,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 16,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
+    paddingTop: 56,
+    paddingBottom: 18,
   },
   title: type.title,
   subtitle: { ...type.body, marginTop: 4 },
@@ -232,12 +229,11 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 88,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
     padding: 12,
     justifyContent: 'space-between',
-    ...shadow,
   },
   pickLabel: { fontSize: 14, color: colors.ink, fontWeight: '800' },
   pickHint: { fontSize: 11, color: colors.muted, fontWeight: '600' },
@@ -245,22 +241,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
     padding: 14,
-    ...shadow,
   },
   previewImage: {
     width: '100%',
     height: 190,
-    borderRadius: radius.md,
+    borderRadius: 18,
     marginTop: 10,
     marginBottom: 12,
   },
   previewDoc: {
     minHeight: 120,
-    borderRadius: radius.md,
+    borderRadius: 18,
     backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
@@ -284,7 +279,7 @@ const styles = StyleSheet.create({
   uploadButton: {
     flex: 1,
     minHeight: 46,
-    borderRadius: radius.md,
+    borderRadius: 15,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -294,7 +289,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     minWidth: 94,
     minHeight: 46,
-    borderRadius: radius.md,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: colors.line,
     alignItems: 'center',
@@ -313,11 +308,10 @@ const styles = StyleSheet.create({
   filePanel: {
     marginHorizontal: 16,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.line,
     overflow: 'hidden',
-    ...shadow,
   },
   fileItem: {
     flexDirection: 'row',
@@ -367,7 +361,7 @@ const styles = StyleSheet.create({
   empty: { padding: 28, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: colors.ink },
   emptyText: { fontSize: 13, color: colors.muted, marginTop: 6, textAlign: 'center' },
-  bottomSpace: { height: 32 },
+  bottomSpace: { height: 112 },
 });
 
 export default UploadScreen;

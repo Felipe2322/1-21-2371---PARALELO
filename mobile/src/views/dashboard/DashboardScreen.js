@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useDashboardViewModel } from '../../viewmodels/DashboardViewModel';
 import { useAuth } from '../../context/AuthContext';
-import { colors, radius, shadow } from '../../styles/theme';
+import { colors, radius } from '../../styles/theme';
 
 const Chip = ({ label, value, color }) => (
   <View style={[s.chip, { borderColor: color + '40' }]}>
@@ -67,7 +67,6 @@ const DashboardScreen = ({ navigation }) => {
         />
       }
     >
-      {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
           <View style={s.headerAvatar}>
@@ -91,7 +90,6 @@ const DashboardScreen = ({ navigation }) => {
 
       {dashboardData ? (
         <>
-          {/* Stats */}
           <View style={s.chips}>
             {isAdmin && (
               <Chip label="Usuarios" value={dashboardData.totalUsers} color={colors.primary} />
@@ -105,7 +103,6 @@ const DashboardScreen = ({ navigation }) => {
             />
           </View>
 
-          {/* Perfil */}
           <Text style={s.sectionTitle}>Mi cuenta</Text>
           <View style={s.card}>
             <View style={s.profileRow}>
@@ -120,7 +117,6 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Usuarios recientes (solo admin) */}
           {isAdmin ? (
             <>
               <View style={s.sectionRow}>
@@ -138,7 +134,6 @@ const DashboardScreen = ({ navigation }) => {
             </>
           ) : null}
 
-          {/* Info servicio */}
           <Text style={s.sectionTitle}>Servicio</Text>
           <View style={s.card}>
             {[
@@ -155,7 +150,7 @@ const DashboardScreen = ({ navigation }) => {
         </>
       ) : null}
 
-      <View style={{ height: 32 }} />
+      <View style={{ height: 112 }} />
     </ScrollView>
   );
 };
@@ -166,16 +161,16 @@ const s = StyleSheet.create({
   loadingTxt: { color: colors.inkSoft, marginTop: 12, fontSize: 14 },
 
   header: {
-    paddingHorizontal: 20, paddingTop: 52, paddingBottom: 20,
+    paddingHorizontal: 20, paddingTop: 56, paddingBottom: 22,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  headerLeft:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerAvatar:    { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  headerAvatarTxt: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  greeting:        { color: colors.ink, fontSize: 17, fontWeight: '800' },
-  role:            { color: colors.muted, fontSize: 12, marginTop: 2 },
-  exitBtn:         { backgroundColor: colors.surface, borderRadius: radius.sm, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.line },
-  exitTxt:         { color: colors.inkSoft, fontSize: 13, fontWeight: '700' },
+  headerLeft:      { flexDirection: 'row', alignItems: 'center', gap: 13, flex: 1 },
+  headerAvatar:    { width: 50, height: 50, borderRadius: 18, backgroundColor: colors.surfaceRaise, borderWidth: 1, borderColor: '#39354F', alignItems: 'center', justifyContent: 'center' },
+  headerAvatarTxt: { color: colors.primaryDark, fontWeight: '900', fontSize: 16 },
+  greeting:        { color: colors.ink, fontSize: 20, fontWeight: '800' },
+  role:            { color: colors.inkSoft, fontSize: 13, marginTop: 3 },
+  exitBtn:         { backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 15, paddingVertical: 9, borderWidth: 1, borderColor: colors.line },
+  exitTxt:         { color: colors.inkSoft, fontSize: 13, fontWeight: '800' },
 
   errorBox:{ margin: 16, padding: 12, borderRadius: radius.sm, backgroundColor: colors.dangerSoft, borderWidth: 1, borderColor: colors.danger + '40' },
   errorTxt:{ color: colors.danger, fontSize: 13 },
@@ -183,40 +178,41 @@ const s = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10, marginBottom: 8 },
   chip:  {
     flex: 1, minWidth: '44%', backgroundColor: colors.surface,
-    borderRadius: radius.md, borderWidth: 1,
-    padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, ...shadow,
+    borderRadius: 18, borderWidth: 1,
+    borderColor: colors.line,
+    padding: 15, flexDirection: 'row', alignItems: 'center', gap: 11,
   },
   chipDot:   { width: 8, height: 8, borderRadius: 4 },
-  chipVal:   { fontSize: 20, fontWeight: '800' },
-  chipLabel: { fontSize: 11, color: colors.muted, fontWeight: '600', marginTop: 2 },
+  chipVal:   { fontSize: 21, fontWeight: '900' },
+  chipLabel: { fontSize: 12, color: colors.muted, fontWeight: '700', marginTop: 2 },
 
   sectionTitle: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   sectionRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   link:         { color: colors.primaryDark, fontSize: 13, fontWeight: '700' },
 
-  card: { marginHorizontal: 16, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', ...shadow },
+  card: { marginHorizontal: 16, backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
 
-  profileRow:       { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
-  profileAvatar:    { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  profileAvatarTxt: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  profileName:      { color: colors.ink, fontSize: 15, fontWeight: '800' },
-  profileEmail:     { color: colors.inkSoft, fontSize: 12, marginTop: 3 },
+  profileRow:       { flexDirection: 'row', alignItems: 'center', padding: 15, gap: 13 },
+  profileAvatar:    { width: 52, height: 52, borderRadius: 18, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: '#3B365B', alignItems: 'center', justifyContent: 'center' },
+  profileAvatarTxt: { color: colors.primaryDark, fontWeight: '900', fontSize: 16 },
+  profileName:      { color: colors.ink, fontSize: 16, fontWeight: '800' },
+  profileEmail:     { color: colors.inkSoft, fontSize: 13, marginTop: 3 },
   meta:             { color: colors.muted, fontSize: 11, marginTop: 4 },
 
-  userRow:     { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
-  uAvatar:     { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  userRow:     { flexDirection: 'row', alignItems: 'center', padding: 13, borderBottomWidth: 1, borderBottomColor: colors.line },
+  uAvatar:     { width: 38, height: 38, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
   uAvatarTxt:  { fontWeight: '800', fontSize: 13 },
   uMeta:       { flex: 1 },
   uName:       { color: colors.ink, fontSize: 14, fontWeight: '700' },
   uEmail:      { color: colors.muted, fontSize: 12, marginTop: 2 },
-  badge:       { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  badge:       { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999 },
   badgeAdmin:  { backgroundColor: colors.primarySoft },
   badgeUser:   { backgroundColor: colors.blueSoft },
   badgeTxt:    { fontSize: 11, fontWeight: '800' },
 
   empty: { padding: 20, textAlign: 'center', color: colors.muted },
 
-  row:       { flexDirection: 'row', justifyContent: 'space-between', padding: 14 },
+  row:       { flexDirection: 'row', justifyContent: 'space-between', padding: 15 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: colors.line },
   rowKey:    { color: colors.inkSoft, fontSize: 13 },
   rowVal:    { color: colors.ink, fontSize: 13, fontWeight: '700' },

@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { colors, radius, shadow } from '../../styles/theme';
+import { colors } from '../../styles/theme';
 
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
@@ -93,26 +93,25 @@ const RegisterScreen = ({ navigation }) => {
 
 const s = StyleSheet.create({
   root:   { flex: 1, backgroundColor: colors.background },
-  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 32 },
+  scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 32 },
 
   back:     { marginBottom: 24 },
   backText: { color: colors.primaryDark, fontSize: 14, fontWeight: '700' },
 
-  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  title: { color: colors.ink, fontSize: 28, fontWeight: '800', letterSpacing: 0 },
   sub:   { color: colors.inkSoft, fontSize: 14, marginTop: 6, marginBottom: 28 },
 
   form: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
     borderColor: colors.line,
-    ...shadow,
   },
   label: { color: colors.inkSoft, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: {
     backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.sm,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.line,
     paddingHorizontal: 14,
@@ -123,7 +122,7 @@ const s = StyleSheet.create({
   inputErr: { borderColor: colors.danger },
   err: { color: colors.danger, fontSize: 12, marginTop: 5 },
 
-  btn:    { marginTop: 8, backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: 15, alignItems: 'center' },
+  btn:    { marginTop: 8, backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
   btnOff: { opacity: 0.6 },
   btnText:{ color: '#fff', fontSize: 15, fontWeight: '800' },
 });

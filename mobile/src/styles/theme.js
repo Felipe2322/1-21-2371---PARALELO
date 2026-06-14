@@ -1,22 +1,22 @@
 export const colors = {
   // Fondos
-  background:   '#0F1117',
-  surface:      '#1A1D27',
-  surfaceRaise: '#232736',
-  surfaceMuted: '#2A2D3E',
+  background:   '#101218',
+  surface:      '#181B23',
+  surfaceRaise: '#20242E',
+  surfaceMuted: '#242834',
 
   // Texto
-  ink:     '#F0F2FF',
-  inkSoft: '#9CA3C4',
-  muted:   '#5C607A',
+  ink:     '#F4F2EA',
+  inkSoft: '#B4B8C6',
+  muted:   '#777D90',
 
   // Bordes
-  line: '#2E3148',
+  line: '#303442',
 
   // Acento principal – violeta/índigo
-  primary:     '#7C6AF4',
-  primaryDark: '#A89BF7',
-  primarySoft: '#2C2848',
+  primary:     '#8E7CFF',
+  primaryDark: '#C8BEFF',
+  primarySoft: '#26233A',
 
   // Secundario – cyan
   blue:     '#38BDF8',
@@ -35,25 +35,25 @@ export const colors = {
 
 export const radius = {
   sm: 8,
-  md: 14,
-  lg: 20,
+  md: 12,
+  lg: 18,
 };
 
 export const shadow = {
   shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
-  shadowRadius: 12,
-  elevation: 6,
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.2,
+  shadowRadius: 16,
+  elevation: 5,
 };
 
 export const type = {
   title: {
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 25,
+    lineHeight: 31,
     fontWeight: '800',
     color: colors.ink,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   section: {
     fontSize: 15,
