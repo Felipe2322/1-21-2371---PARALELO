@@ -128,6 +128,14 @@ jobs:
           # ── S3 ──────────────────────────────────────────────
           import_if_missing "aws_s3_bucket.uploads" \
             "app-felix-uploads-production"
+          import_if_missing "aws_s3_bucket_versioning.uploads" \
+            "app-felix-uploads-production"
+          import_if_missing "aws_s3_bucket_public_access_block.uploads" \
+            "app-felix-uploads-production"
+          import_if_missing "aws_s3_bucket_cors_configuration.uploads" \
+            "app-felix-uploads-production"
+          import_if_missing "aws_s3_bucket_policy.uploads_public_read" \
+            "app-felix-uploads-production"
 
           # ── CloudWatch ──────────────────────────────────────
           import_if_missing "aws_cloudwatch_log_group.lambda_logs" \
@@ -142,6 +150,16 @@ jobs:
 
           import_if_missing "aws_iam_role.notification_lambda_exec" \
             "app-felix-notification-lambda-role-production"
+          import_if_missing "aws_iam_role_policy_attachment.lambda_basic" \
+            "app-felix-lambda-role-production/arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+          import_if_missing "aws_iam_role_policy_attachment.notification_lambda_basic" \
+            "app-felix-notification-lambda-role-production/arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+          import_if_missing "aws_iam_role_policy.lambda_s3" \
+            "app-felix-lambda-role-production:app-felix-lambda-s3-policy"
+          import_if_missing "aws_iam_role_policy.lambda_sns" \
+            "app-felix-lambda-role-production:app-felix-lambda-sns-policy"
+          import_if_missing "aws_iam_role_policy.notification_lambda_policy" \
+            "app-felix-notification-lambda-role-production:app-felix-notification-lambda-policy"
 
           # ── Lambda Functions ────────────────────────────────
           import_if_missing "aws_lambda_function.api" \
@@ -182,6 +200,29 @@ jobs:
           # ── API Gateway (importar el activo: 93ga9dr0p2) ────
           import_if_missing "aws_apigatewayv2_api.http_api" \
             "93ga9dr0p2"
+
+          DEFAULT_ROUTE_ID=$(aws apigatewayv2 get-routes \
+            --api-id "93ga9dr0p2" \
+            --region "$REGION" \
+            --query "Items[?RouteKey=='\$default'].RouteId | [0]" \
+            --output text 2>/dev/null || echo "")
+
+          DEFAULT_ROUTE_TARGET=$(aws apigatewayv2 get-routes \
+            --api-id "93ga9dr0p2" \
+            --region "$REGION" \
+            --query "Items[?RouteKey=='\$default'].Target | [0]" \
+            --output text 2>/dev/null || echo "")
+
+          DEFAULT_INTEGRATION_ID=${DEFAULT_ROUTE_TARGET#integrations/}
+          if [ -n "$DEFAULT_INTEGRATION_ID" ] && [ "$DEFAULT_INTEGRATION_ID" != "None" ] && [ "$DEFAULT_INTEGRATION_ID" != "$DEFAULT_ROUTE_TARGET" ]; then
+            import_if_missing "aws_apigatewayv2_integration.lambda" \
+              "93ga9dr0p2/$DEFAULT_INTEGRATION_ID"
+          fi
+
+          if [ -n "$DEFAULT_ROUTE_ID" ] && [ "$DEFAULT_ROUTE_ID" != "None" ]; then
+            import_if_missing "aws_apigatewayv2_route.default" \
+              "93ga9dr0p2/$DEFAULT_ROUTE_ID"
+          fi
 
           import_if_missing "aws_apigatewayv2_stage.default" \
             "93ga9dr0p2/\$default"
